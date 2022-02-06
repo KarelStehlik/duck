@@ -1,6 +1,10 @@
 import numpy as np
 import random
-import math
+
+
+def mutate_function(val):
+    return val * (random.random()-0.5) * 4
+
 
 def relu(data):
     return np.maximum(0, data)
@@ -32,7 +36,6 @@ class Network:
             self.activation = activation
 
     def run(self, inputs):
-       # return[100*math.pi*4/3,400]
         values = inputs
         for i in range(self.count_layers):
             values = np.dot(values, self.weights[i].T) + self.biases[i]
@@ -47,22 +50,22 @@ class Network:
         new.weights = [e.copy() for e in self.weights]
         new.biases = [e.copy() for e in self.biases]
         new.activation = [e for e in self.activation]
-        new.n_weights=self.n_weights
-        new.n_biases=self.n_biases
+        new.n_weights = self.n_weights
+        new.n_biases = self.n_biases
         return new
 
     def mutate(self, amount):
         for i in range(amount):
-           # print(0, self.n_weights + self.n_biases - 1)
             target = random.randint(0, self.n_weights + self.n_biases - 1)
             for biases in self.biases:
                 if biases.shape[0] > target:
-                    biases[target] *= 4 * random.random() - 2
+                    biases[target] = mutate_function(biases[target])
                     continue
                 target -= biases.shape[0]
             for weights in self.weights:
                 if weights.shape[0] * weights.shape[1] > target:
-                    weights[int(target / weights.shape[1])][target % weights.shape[1]] *= 4 * random.random() - 2
+                    val = weights[int(target / weights.shape[1])][target % weights.shape[1]]
+                    weights[int(target / weights.shape[1])][target % weights.shape[1]] = mutate_function(val)
                     continue
                 else:
                     target -= weights.shape[0] * weights.shape[1] > target

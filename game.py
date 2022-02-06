@@ -59,6 +59,12 @@ class Game:
                 x=SCREEN_WIDTH * .02,
                 y=SCREEN_HEIGHT * .95, color=(255, 255, 255, 255),
                 batch=self.batch, group=groups.g[3], font_size=int(SCREEN_HEIGHT * .03),
+                anchor_x="left", align="center", anchor_y="center"),
+            pyglet.text.Label(
+                "winrate 0%",
+                x=SCREEN_WIDTH * .02,
+                y=SCREEN_HEIGHT * .91, color=(255, 255, 255, 255),
+                batch=self.batch, group=groups.g[3], font_size=int(SCREEN_HEIGHT * .03),
                 anchor_x="left", align="center", anchor_y="center")
         ]
 
@@ -102,7 +108,7 @@ class Game:
         if self.ongoing and time.perf_counter() - self.starttime > self.ticks / self.fps:
             self.tick2()
             self.ticks += 1
-            while self.boost and (time.perf_counter() - t0 < 0.5):
+            while (self.boost or (True not in [e.visible for e in self.ducks])) and (time.perf_counter() - t0 < 0.5):
                 self.tick2()
         [e.graphics_update() for e in self.ducks]
         [e.graphics_update() for e in self.foxes]
@@ -121,14 +127,15 @@ class Game:
         for e in self.ducks:
             if e.fitness > INFINITY:
                 wins += 1
-        if wins > 0.7 * POPULATION_SIZE:
+        if wins > WINS_TO_PROGRESS* POPULATION_SIZE:
             self.set_speed_ratio(self.speed_ratio + 0.05)
+        self.labels[3].text = f"Winrate {int(wins / POPULATION_SIZE * 100)}%"
         self.ducks.sort(key=get_fitness, reverse=True)
         d = []
         i = 0
         self.duration = 0
         for e in range(KEEP_DUCKS):
-            d.append(Duck(self,self.ducks[e].ai.clone(),False))
+            d.append(Duck(self, self.ducks[e].ai.clone(), False))
         while len(d) < POPULATION_SIZE:
             child1 = self.ducks[i].ai
             child2 = self.ducks[i].ai.clone()
@@ -157,7 +164,7 @@ class Duck:
         if visible:
             self.sprite = pyglet.sprite.Sprite(images.Duck, x=self.x, y=self.y, batch=game.batch, group=groups.g[3])
             self.sprite.scale = SCREEN_WIDTH * .05 / self.sprite.width
-            self.sprite.opacity = 100+155//SHOWN
+            self.sprite.opacity = 100 + 155 // SHOWN
         self.ai = ai
         self.fox = None
         self.fitness = 0
@@ -172,7 +179,7 @@ class Duck:
         centre_distance = distance(self.x, self.y, POOL_X, POOL_Y)
         angle_to_fox = get_rotation(self.x - POOL_X, self.y - POOL_Y) - fox_angle
 
-        self.fitness += abs(angle_to_fox + 2 * math.pi) % math.pi * 1000 - 5000
+        self.fitness += abs(angle_to_fox + 2 * math.pi) % math.pi * 1000 - 3000
         ai_output = self.ai.run([math.sin(angle_to_fox),
                                  math.cos(angle_to_fox),
                                  (POOL_RADIUS / self.game.speed_ratio - centre_distance) / 1000,
@@ -197,6 +204,7 @@ class Duck:
         if self.active and self.visible:
             self.sprite.delete()
         self.active = False
+        self.visible = False
 
 
 class Fox:
