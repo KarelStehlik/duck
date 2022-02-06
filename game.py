@@ -1,5 +1,4 @@
 import client_utility
-import constants
 from constants import *
 from imports import *
 import images
@@ -21,8 +20,8 @@ class Game:
         self.mouse_x, self.mouse_y = 0, 0
         self.speed = 30
         self.speed_ratio = 0.5
-        self.ducks = [Duck(self, neurons.Network(*constants.NETWORK_PARAMS), e % constants.SHOWN_RATIO == 0)
-                      for e in range(constants.POPULATION_SIZE)]
+        self.ducks = [Duck(self, neurons.Network(*NETWORK_PARAMS), e % SHOWN_RATIO == 0)
+                      for e in range(POPULATION_SIZE)]
         self.foxes = [Fox(self, e, e.visible) for e in self.ducks]
         self.ongoing = True
         self.background_texgroup = client_utility.TextureBindGroup(images.Background, layer=0)
@@ -112,7 +111,7 @@ class Game:
         self.duration += self.speed
         [e.tick() for e in self.ducks]
         [e.tick() for e in self.foxes]
-        if self.duration > constants.MAX_TIME or True not in [e.active for e in self.ducks]:
+        if self.duration > MAX_TIME or True not in [e.active for e in self.ducks]:
             self.new_round()
 
     def new_round(self):
@@ -120,22 +119,22 @@ class Game:
         [e.deactivate() for e in self.ducks]
         wins = 0
         for e in self.ducks:
-            if e.fitness > constants.INFINITY:
+            if e.fitness > INFINITY:
                 wins += 1
-        if wins > 0.7 * constants.POPULATION_SIZE:
+        if wins > 0.7 * POPULATION_SIZE:
             self.set_speed_ratio(self.speed_ratio + 0.05)
         self.ducks.sort(key=get_fitness, reverse=True)
         d = []
         i = 0
         self.duration = 0
-        for e in range(constants.KEEP_DUCKS):
+        for e in range(KEEP_DUCKS):
             d.append(Duck(self,self.ducks[e].ai.clone(),False))
-        while len(d) < constants.POPULATION_SIZE:
+        while len(d) < POPULATION_SIZE:
             child1 = self.ducks[i].ai
             child2 = self.ducks[i].ai.clone()
-            child1.mutate(constants.MUTATIONS)
-            child2.mutate(constants.MUTATIONS)
-            d.append(Duck(self, child1, i % (constants.SHOWN_RATIO // 2) == 0))
+            child1.mutate(MUTATIONS)
+            child2.mutate(MUTATIONS)
+            d.append(Duck(self, child1, i % (SHOWN_RATIO // 2) == 0))
             d.append(Duck(self, child2, False))
             i += 1
         [e.delete() for e in self.foxes]
@@ -158,7 +157,7 @@ class Duck:
         if visible:
             self.sprite = pyglet.sprite.Sprite(images.Duck, x=self.x, y=self.y, batch=game.batch, group=groups.g[3])
             self.sprite.scale = SCREEN_WIDTH * .05 / self.sprite.width
-            self.sprite.opacity = 100
+            self.sprite.opacity = 100+155//SHOWN
         self.ai = ai
         self.fox = None
         self.fitness = 0
@@ -174,20 +173,18 @@ class Duck:
         angle_to_fox = get_rotation(self.x - POOL_X, self.y - POOL_Y) - fox_angle
 
         self.fitness += abs(angle_to_fox + 2 * math.pi) % math.pi * 1000 - 5000
-        if not self.rush:
-            ai_output = self.ai.run([math.sin(angle_to_fox),
-                                     math.cos(angle_to_fox),
-                                     (POOL_RADIUS / self.game.speed_ratio - centre_distance) / 1000,
-                                     (constants.MAX_TIME - self.game.duration) / 1000],
-                                    )
-            ai_angle = ai_output[0]
-           # self.rush = ai_output[1]
-            self.direction = get_rotation(self.x - POOL_X, self.y - POOL_Y) + ai_angle / 100
+        ai_output = self.ai.run([math.sin(angle_to_fox),
+                                 math.cos(angle_to_fox),
+                                 (POOL_RADIUS / self.game.speed_ratio - centre_distance) / 1000,
+                                 (MAX_TIME - self.game.duration) / 1000],
+                                )
+        ai_angle = ai_output[0]
+        self.direction = get_rotation(self.x - POOL_X, self.y - POOL_Y) + ai_angle / 100
         self.x += self.speed * math.cos(self.direction)
         self.y += self.speed * math.sin(self.direction)
         if centre_distance > POOL_RADIUS:
             self.deactivate()
-            self.fitness += distance(self.x, self.y, self.fox.x, self.fox.y) * constants.INFINITY
+            self.fitness += distance(self.x, self.y, self.fox.x, self.fox.y) * INFINITY
 
     def graphics_update(self):
         if self.visible and self.active:
