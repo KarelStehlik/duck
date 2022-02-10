@@ -2,7 +2,6 @@ import client_utility
 from constants import *
 from imports import *
 import images
-import groups
 import neurons
 
 
@@ -32,39 +31,39 @@ class Game:
             ("t2f", (0, 0, SCREEN_WIDTH / 512, 0, SCREEN_WIDTH / 512, SCREEN_HEIGHT / 512,
                      0, SCREEN_HEIGHT / 512))
         )
-        self.pool = pyglet.sprite.Sprite(images.Pool, x=POOL_X, y=POOL_Y, batch=self.batch, group=groups.g[1])
+        self.pool = pyglet.sprite.Sprite(images.Pool, x=POOL_X, y=POOL_Y, batch=self.batch, group=groups[1])
         self.pool.scale = POOL_RADIUS * 2 / self.pool.width
-        self.ring = pyglet.sprite.Sprite(images.Ring, x=POOL_X, y=POOL_Y, batch=self.batch, group=groups.g[2])
+        self.ring = pyglet.sprite.Sprite(images.Ring, x=POOL_X, y=POOL_Y, batch=self.batch, group=groups[2])
         self.ring.scale = POOL_RADIUS * 2 / self.ring.width / self.speed_ratio
         self.result_text = None
         self.duration = 0
-        self.textboxes = [(client_utility.text_box(self.set_speed, SCREEN_WIDTH * .8, SCREEN_HEIGHT * .9,
-                                                   SCREEN_WIDTH * .2, SCREEN_HEIGHT * .1,
-                                                   self.batch, default=self.speed)),
+        self.textboxes = [(client_utility.TextBox(self.set_speed, SCREEN_WIDTH * .8, SCREEN_HEIGHT * .9,
+                                                  SCREEN_WIDTH * .2, SCREEN_HEIGHT * .1,
+                                                  self.batch, default=self.speed)),
                           ]
         self.labels = [pyglet.text.Label(
             "overall speed",
             x=SCREEN_WIDTH * .79,
             y=SCREEN_HEIGHT * .95, color=(255, 255, 255, 255),
-            batch=self.batch, group=groups.g[3], font_size=int(SCREEN_HEIGHT * .03),
+            batch=self.batch, group=groups[3], font_size=int(SCREEN_HEIGHT * .03),
             anchor_x="right", align="center", anchor_y="center"),
             pyglet.text.Label(
                 f"fox / duck speed: {self.speed_ratio}",
                 x=SCREEN_WIDTH * .98,
                 y=SCREEN_HEIGHT * .85, color=(255, 255, 255, 255),
-                batch=self.batch, group=groups.g[3], font_size=int(SCREEN_HEIGHT * .03),
+                batch=self.batch, group=groups[3], font_size=int(SCREEN_HEIGHT * .03),
                 anchor_x="right", align="center", anchor_y="center"),
             pyglet.text.Label(
                 "generation 0",
                 x=SCREEN_WIDTH * .02,
                 y=SCREEN_HEIGHT * .95, color=(255, 255, 255, 255),
-                batch=self.batch, group=groups.g[3], font_size=int(SCREEN_HEIGHT * .03),
+                batch=self.batch, group=groups[3], font_size=int(SCREEN_HEIGHT * .03),
                 anchor_x="left", align="center", anchor_y="center"),
             pyglet.text.Label(
                 "winrate 0%",
                 x=SCREEN_WIDTH * .02,
                 y=SCREEN_HEIGHT * .91, color=(255, 255, 255, 255),
-                batch=self.batch, group=groups.g[3], font_size=int(SCREEN_HEIGHT * .03),
+                batch=self.batch, group=groups[3], font_size=int(SCREEN_HEIGHT * .03),
                 anchor_x="left", align="center", anchor_y="center")
         ]
 
@@ -129,13 +128,15 @@ class Game:
                 wins += 1
         if wins > WINS_TO_PROGRESS* POPULATION_SIZE:
             self.set_speed_ratio(self.speed_ratio + 0.05)
+        elif wins == 0:
+            self.set_speed_ratio(self.speed_ratio - 0.05)
         self.labels[3].text = f"Winrate {int(wins / POPULATION_SIZE * 100)}%"
         self.ducks.sort(key=get_fitness, reverse=True)
         d = []
-        i = 0
         self.duration = 0
         for e in range(KEEP_DUCKS):
             d.append(Duck(self, self.ducks[e].ai.clone(), False))
+        i = 0
         while len(d) < POPULATION_SIZE:
             child1 = self.ducks[i].ai
             child2 = self.ducks[i].ai.clone()
@@ -162,7 +163,7 @@ class Duck:
         self.speed = game.speed
         self.visible = visible
         if visible:
-            self.sprite = pyglet.sprite.Sprite(images.Duck, x=self.x, y=self.y, batch=game.batch, group=groups.g[3])
+            self.sprite = pyglet.sprite.Sprite(images.Duck, x=self.x, y=self.y, batch=game.batch, group=groups[3])
             self.sprite.scale = SCREEN_WIDTH * .05 / self.sprite.width
             self.sprite.opacity = 100 + 155 // SHOWN
         self.ai = ai
@@ -178,12 +179,13 @@ class Duck:
         fox_angle = self.fox.angle
         centre_distance = distance(self.x, self.y, POOL_X, POOL_Y)
         angle_to_fox = get_rotation(self.x - POOL_X, self.y - POOL_Y) - fox_angle
-
         self.fitness += abs(angle_to_fox + 2 * math.pi) % math.pi * 1000 - 3000
-        ai_output = self.ai.run([math.sin(angle_to_fox),
-                                 math.cos(angle_to_fox),
-                                 (POOL_RADIUS / self.game.speed_ratio - centre_distance) / 1000,
-                                 (MAX_TIME - self.game.duration) / 1000],
+        ai_output = self.ai.run(
+            [math.sin(angle_to_fox),
+             math.cos(angle_to_fox),
+             (POOL_RADIUS / self.game.speed_ratio - centre_distance) / 1000,
+             (MAX_TIME - self.game.duration) / 1000
+             ],
                                 )
         ai_angle = ai_output[0]
         self.direction = get_rotation(self.x - POOL_X, self.y - POOL_Y) + ai_angle / 100
@@ -215,7 +217,7 @@ class Fox:
         speed = game.speed * game.speed_ratio
         self.visible = visible
         if visible:
-            self.sprite = pyglet.sprite.Sprite(images.Fox, x=self.x, y=self.y, batch=game.batch, group=groups.g[3])
+            self.sprite = pyglet.sprite.Sprite(images.Fox, x=self.x, y=self.y, batch=game.batch, group=groups[3])
             self.sprite.scale = SCREEN_WIDTH * .05 / self.sprite.width
             self.sprite.opacity = 100
         self.direction = 0

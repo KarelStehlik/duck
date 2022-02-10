@@ -1,8 +1,4 @@
-import groups
-import pyglet
-import time
-import os
-import constants
+from imports import *
 import game
 from pyglet.window import key
 
@@ -17,7 +13,7 @@ class windoo(pyglet.window.Window):
         self.sec = time.time()
         self.frames = 0
         self.fpscount = pyglet.text.Label(x=5, y=5, text="0", color=(255, 255, 255, 255),
-                                          group=groups.g[9], batch=self.batch)
+                                          group=groups[9], batch=self.batch)
         self.mouseheld = False
         self.keys = key.KeyStateHandler()
         self.push_handlers(self.keys)

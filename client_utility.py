@@ -1,8 +1,7 @@
 from pyglet.gl import *
 
-import groups
 import images
-from constants import *
+from imports import *
 from pyglet.window import key
 
 
@@ -46,9 +45,9 @@ def do_nothing(*args):
     pass
 
 
-class text_box:
+class TextBox:
     def __init__(self, func, x, y, width, height, batch, image=images.Button, default=0, args=(), layer=5):
-        self.sprite = pyglet.sprite.Sprite(image, x=x + width / 2, y=y + height / 2, batch=batch, group=groups.g[layer])
+        self.sprite = pyglet.sprite.Sprite(image, x=x + width / 2, y=y + height / 2, batch=batch, group=groups[layer])
         self.layer = layer
         self.sprite.scale_x = width / self.sprite.width
         self.sprite.scale_y = height / self.sprite.height
@@ -59,7 +58,7 @@ class text_box:
         self.ogx, self.ogy = x, y
         self.text = pyglet.text.Label(str(default), x=self.x + self.width // 2,
                                       y=self.y + self.height * 4 / 7, color=(255, 255, 0, 255),
-                                      batch=batch, group=groups.g[layer + 1], font_size=int(self.height / 2),
+                                      batch=batch, group=groups[layer + 1], font_size=int(self.height / 2),
                                       anchor_x="center", align="center", anchor_y="center")
         self.down = False
         self.big = 0
@@ -78,7 +77,7 @@ class text_box:
     def set_image(self, img):
         self.sprite = pyglet.sprite.Sprite(img, x=self.x + self.width / 2, y=self.y + self.height / 2,
                                            batch=self.batch,
-                                           group=groups.g[self.layer])
+                                           group=groups[self.layer])
         self.sprite.scale_x = self.width / self.sprite.width
         self.sprite.scale_y = self.height / self.sprite.height
 
@@ -125,93 +124,3 @@ class text_box:
                 self.func(self.value)
                 self.selected=False
 
-
-class button:
-    def __init__(self, func, x, y, width, height, batch, image=images.Button, text="", args=(), layer=5,
-                 mouseover=do_nothing, mouseoff=do_nothing, mover_args=(), moff_args=()):
-        self.sprite = pyglet.sprite.Sprite(image, x=x + width / 2, y=y + height / 2, batch=batch, group=groups.g[layer])
-        self.layer = layer
-        self.sprite.scale_x = width / self.sprite.width
-        self.sprite.scale_y = height / self.sprite.height
-        self.func = func
-        self.fargs = args
-        self.batch = batch
-        self.x, self.y, self.width, self.height = x, y, width, height
-        self.ogx, self.ogy = x, y
-        self.text = pyglet.text.Label(text, x=self.x + self.width // 2,
-                                      y=self.y + self.height * 4 / 7, color=(255, 255, 0, 255),
-                                      batch=batch, group=groups.g[layer + 1], font_size=int(self.height / 2),
-                                      anchor_x="center", align="center", anchor_y="center")
-        self.down = False
-        self.big = 0
-        self.on_mouse_over = mouseover
-        self.on_mouse_off = mouseoff
-        self.mover_args = mover_args
-        self.moff_args = moff_args
-
-    def hide(self):
-        self.text.batch = None
-        self.sprite.batch = None
-
-    def show(self):
-        self.text.batch = self.batch
-        self.sprite.batch = self.batch
-
-    def set_image(self, img):
-        self.sprite = pyglet.sprite.Sprite(img, x=self.x + self.width / 2, y=self.y + self.height / 2, batch=self.batch,
-                                           group=groups.g[self.layer])
-        self.sprite.scale_x = self.width / self.sprite.width
-        self.sprite.scale_y = self.height / self.sprite.height
-
-    def embiggen(self):
-        self.big = 1
-        self.sprite.scale = 1.1
-
-    def unbiggen(self):
-        self.big = 0
-        self.sprite.scale = 1
-
-    def smallen(self):
-        self.big = -1
-        self.sprite.scale = 0.9
-
-    def update(self, x, y):
-        self.sprite.update(x=x + self.width / 2, y=y + self.height / 2)
-        self.x, self.y = x, y
-        self.text.x = x + self.width // 2
-        self.text.y = y + self.height * 4 / 7
-
-    def mouse_move(self, x, y):
-        if not self.down:
-            if (self.big == 1) == (self.x + self.width >= x >= self.x and self.y + self.height >= y >= self.y):
-                return
-            if self.big != 1:
-                self.mouse_over()
-                return
-            self.mouse_off()
-
-    def mouse_over(self):
-        self.embiggen()
-        self.on_mouse_over(*self.mover_args)
-
-    def mouse_off(self):
-        self.unbiggen()
-        self.on_mouse_off(*self.moff_args)
-
-    def mouse_click(self, x, y):
-        if self.x + self.width >= x >= self.x and self.y + self.height >= y >= self.y:
-            self.smallen()
-            self.down = True
-            return True
-        return False
-
-    def mouse_release(self, x, y):
-        if self.down:
-            self.down = False
-            self.unbiggen()
-            if self.x + self.width >= x >= self.x and self.y + self.height >= y >= self.y:
-                self.func(*self.fargs)
-
-    def delete(self):
-        self.sprite.delete()
-        self.text.delete()

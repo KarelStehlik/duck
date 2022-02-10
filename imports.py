@@ -9,6 +9,7 @@ import math
 from numba import njit, float64
 import constants
 
+groups = [pyglet.graphics.OrderedGroup(i) for i in range(20)]
 pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
 
 def is_empty_2d(l):
