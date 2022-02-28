@@ -131,9 +131,9 @@ class Game:
         elif wins == 0:
             self.set_speed_ratio(self.speed_ratio - 0.05)
         self.labels[3].text = f"Winrate {int(wins / POPULATION_SIZE * 100)}%"
+        self.duration = 0
         self.ducks.sort(key=get_fitness, reverse=True)
         d = []
-        self.duration = 0
         for e in range(KEEP_DUCKS):
             d.append(Duck(self, self.ducks[e].ai.clone(), False))
         i = 0
