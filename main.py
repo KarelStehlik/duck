@@ -1,3 +1,5 @@
+from abc import ABC
+
 from imports import *
 import game
 from pyglet.window import key
@@ -6,7 +8,7 @@ pyglet.options['debug_gl'] = False
 pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
 
 
-class windoo(pyglet.window.Window):
+class main_window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.batch = pyglet.graphics.Batch()
@@ -19,6 +21,7 @@ class windoo(pyglet.window.Window):
         self.push_handlers(self.keys)
         self.last_tick = time.time()
         self.game = game.Game(self)
+        self.open = True
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.game.on_mouse_motion(x, y, dx, dy)
@@ -28,10 +31,12 @@ class windoo(pyglet.window.Window):
 
     def on_close(self):
         self.close()
-        os._exit(0)
+        self.open = False
 
     def tick(self):
         self.dispatch_events()
+        if not self.open:
+            return
         self.check()
         self.switch_to()
         self.clear()
@@ -54,9 +59,6 @@ class windoo(pyglet.window.Window):
         self.mouseheld = True
         self.game.on_mouse_press(x, y, button, modifiers)
 
-    # def on_deactivate(self):
-    #    self.minimize()
-
     def check(self):
         self.frames += 1
         if time.time() - self.sec >= 1:
@@ -65,10 +67,10 @@ class windoo(pyglet.window.Window):
             self.frames = 0
 
 
-place = windoo(caption='test', style=pyglet.window.Window.WINDOW_STYLE_BORDERLESS, width=constants.SCREEN_WIDTH,
-               height=constants.SCREEN_HEIGHT)
+place = main_window(caption='test', style=pyglet.window.Window.WINDOW_STYLE_BORDERLESS, width=constants.SCREEN_WIDTH,
+                    height=constants.SCREEN_HEIGHT)
 place.set_location(0, 0)
 
-while True:
+while place.open:
     place.tick()
     pyglet.clock.tick()

@@ -9,6 +9,9 @@ import math
 from numba import njit, float64
 import constants
 
+def get_fitness(obj):
+    return obj.fitness
+
 groups = [pyglet.graphics.OrderedGroup(i) for i in range(20)]
 pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
 

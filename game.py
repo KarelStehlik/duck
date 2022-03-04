@@ -1,4 +1,5 @@
 import client_utility
+import constants
 from constants import *
 from imports import *
 import images
@@ -126,7 +127,7 @@ class Game:
         for e in self.ducks:
             if e.fitness > INFINITY:
                 wins += 1
-        if wins > WINS_TO_PROGRESS* POPULATION_SIZE:
+        if wins > WINS_TO_PROGRESS * POPULATION_SIZE:
             self.set_speed_ratio(self.speed_ratio + 0.05)
         elif wins == 0:
             self.set_speed_ratio(self.speed_ratio - 0.05)
@@ -149,10 +150,6 @@ class Game:
         self.foxes = [Fox(self, e, e.visible) for e in d]
         self.ducks = d
         self.labels[2].text = f"generation {self.generations}"
-
-
-def get_fitness(obj):
-    return obj.fitness
 
 
 class Duck:
@@ -179,14 +176,14 @@ class Duck:
         fox_angle = self.fox.angle
         centre_distance = distance(self.x, self.y, POOL_X, POOL_Y)
         angle_to_fox = get_rotation(self.x - POOL_X, self.y - POOL_Y) - fox_angle
-        self.fitness += abs(angle_to_fox + 2 * math.pi) % math.pi * 1000 - 3000
+        self.fitness += abs(angle_to_fox + 2 * math.pi) % math.pi * 1000 - 2000
         ai_output = self.ai.run(
             [math.sin(angle_to_fox),
              math.cos(angle_to_fox),
              (POOL_RADIUS / self.game.speed_ratio - centre_distance) / 1000,
-             (MAX_TIME - self.game.duration) / 1000
+             #  (MAX_TIME - self.game.duration) / 1000
              ],
-                                )
+        )
         ai_angle = ai_output[0]
         self.direction = get_rotation(self.x - POOL_X, self.y - POOL_Y) + ai_angle / 100
         self.x += self.speed * math.cos(self.direction)
@@ -229,15 +226,13 @@ class Fox:
     def tick(self):
         if not self.target.active:
             return
-        duck_angle = get_rotation(self.target.x - POOL_X, self.target.y - POOL_Y) % (2 * math.pi)
-        if self.angle > duck_angle:
-            direction = -1 if math.pi - self.angle + duck_angle > 0 else 1
-        else:
-            direction = -1 if duck_angle - self.angle > math.pi else 1
+        angle = (get_rotation(self.x - POOL_X, self.y - POOL_Y) -
+                 get_rotation(self.target.x - POOL_X, self.target.y - POOL_Y) + 2 * math.pi) % (2 * math.pi)
+        direction = 1 if angle > math.pi else -1
         self.angle += self.angular_speed * direction
         self.angle %= 2 * math.pi
         self.x, self.y = POOL_X + math.cos(self.angle) * POOL_RADIUS, POOL_Y + math.sin(self.angle) * POOL_RADIUS
-        if distance(self.x, self.y, self.target.x, self.target.y) < FOX_SIZE:
+        if distance(self.x, self.y, self.target.x, self.target.y) < self.game.speed * constants.FOX_SIZE:
             self.target.die()
             if self.visible:
                 self.sprite.delete()
@@ -251,4 +246,5 @@ class Fox:
         try:
             self.sprite.delete()
         except AttributeError:
-            pass
+            pass36+
+            7\0............................................................................................+966666666666666666666666666666666666666666666666666.
